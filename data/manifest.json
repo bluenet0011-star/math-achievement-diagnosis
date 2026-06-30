@@ -1,0 +1,22 @@
+{
+  "_comment": "콘텐츠 파일 목록. 새 과목/문항을 추가할 때는 JSON 파일을 만들고 이 목록에만 등록하면 됩니다 (코드 수정 불필요).",
+  "nodes": [
+    "data/nodes/prob-stats.json",
+    "data/nodes/all-subjects.json"
+  ],
+  "edges": [
+    "data/edges/edges.json",
+    "data/edges/prereq-curated.json",
+    "data/edges/prereq-draft.json"
+  ],
+  "skillPrereq": [
+    "data/edges/prereq-skills.json"
+  ],
+  "activities": [
+    "data/activities/prob-stats.json",
+    "data/activities/algebra.json",
+    "data/activities/geometry.json",
+    "data/activities/calculus1.json",
+    "data/activities/gongsu1.json"
+  ]
+}

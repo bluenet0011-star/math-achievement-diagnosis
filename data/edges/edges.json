@@ -1,0 +1,20 @@
+{
+"_comment": "rel: contains(포함) / prerequisite(선수, from=선수개념 → to=상위개념) / relates_to(연관). 강도/weight 없음(D4).",
+"edges": [
+{
+"from": "확통-경우의수",
+"to": "확통",
+"rel": "contains"
+},
+{
+"from": "확통-확률",
+"to": "확통",
+"rel": "contains"
+},
+{
+"from": "확통-통계",
+"to": "확통",
+"rel": "contains"
+}
+]
+}

@@ -1,0 +1,1481 @@
+{
+"_comment": "prereq-skills.json에서 rollup+추이축소 자동생성.",
+"edges": [
+{
+"from": "10공수1-01-01",
+"to": "10공수1-01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-01-02",
+"to": "10공수1-02-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-01-03",
+"to": "10공수1-02-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-01-03",
+"to": "10공수2-01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-01",
+"to": "10공수1-02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-02",
+"to": "10공수1-02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-02",
+"to": "10공수1-02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-02",
+"to": "10공수2-01-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-04",
+"to": "10공수1-02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-04",
+"to": "10공수1-02-11",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-04",
+"to": "12기하01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-07",
+"to": "10공수1-02-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-09",
+"to": "10공수1-02-10",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-09",
+"to": "10공수1-02-11",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-02-11",
+"to": "10공수2-02-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-03-01",
+"to": "10공수1-03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-03-01",
+"to": "12확통02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-03-02",
+"to": "10공수1-03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-03-02",
+"to": "12확통01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-03-03",
+"to": "12확통01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-03-03",
+"to": "12확통01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수1-04-01",
+"to": "10공수1-04-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-01",
+"to": "10공수2-01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-01",
+"to": "12기하01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-01",
+"to": "12기하02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-01",
+"to": "12기하03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-02",
+"to": "10공수2-01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-02",
+"to": "12미적Ⅰ-02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-03",
+"to": "10공수2-01-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-04",
+"to": "10공수2-01-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-04",
+"to": "10공수2-01-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-04",
+"to": "12기하01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-04",
+"to": "12기하02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-05",
+"to": "12기하01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-06",
+"to": "10공수2-01-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-06",
+"to": "10공수2-03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-01-07",
+"to": "10공수2-03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-02-01",
+"to": "10공수2-02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-02-01",
+"to": "10공수2-02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-02-02",
+"to": "10공수2-02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-02-04",
+"to": "10공수2-02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-02-05",
+"to": "10공수2-02-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-02-05",
+"to": "10공수2-02-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-02-07",
+"to": "12대수03-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-01",
+"to": "10공수2-03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-01",
+"to": "10공수2-03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-01",
+"to": "12대수01-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-01",
+"to": "12대수02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-01",
+"to": "12미적Ⅰ-01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-02",
+"to": "12미적Ⅱ-02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-03",
+"to": "12대수01-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-03",
+"to": "12미적Ⅱ-02-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-04",
+"to": "10공수2-03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "10공수2-03-04",
+"to": "12미적Ⅰ-01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하01-01",
+"to": "12기하01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하01-02",
+"to": "12기하01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하02-01",
+"to": "12기하02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하02-02",
+"to": "12기하02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하02-04",
+"to": "12기하02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하02-05",
+"to": "12기하03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하03-01",
+"to": "12기하03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하03-02",
+"to": "12기하03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하03-03",
+"to": "12기하03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12기하03-03",
+"to": "12기하03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-01",
+"to": "12대수01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-01",
+"to": "12대수03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-02",
+"to": "12대수01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-03",
+"to": "12대수01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-04",
+"to": "12대수01-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-04",
+"to": "12대수01-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-06",
+"to": "12대수01-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-06",
+"to": "12대수01-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수01-06",
+"to": "12미적Ⅱ-02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수02-01",
+"to": "12대수02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수02-02",
+"to": "12대수02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수02-02",
+"to": "12미적Ⅱ-02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수02-03",
+"to": "12기하03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-01",
+"to": "12대수03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-01",
+"to": "12대수03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-02",
+"to": "12대수03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-02",
+"to": "12대수03-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-02",
+"to": "12미적Ⅱ-01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-03",
+"to": "12대수03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-03",
+"to": "12미적Ⅱ-01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-04",
+"to": "12대수03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-04",
+"to": "12미적Ⅱ-01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12대수03-06",
+"to": "12대수03-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-01",
+"to": "12미적Ⅰ-01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-01",
+"to": "12미적Ⅰ-01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-01",
+"to": "12미적Ⅱ-01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-02",
+"to": "12미적Ⅰ-02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-02",
+"to": "12미적Ⅱ-01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-03",
+"to": "12미적Ⅰ-01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-03",
+"to": "12미적Ⅰ-02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-01-04",
+"to": "12미적Ⅰ-02-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-01",
+"to": "12미적Ⅰ-02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-01",
+"to": "12미적Ⅰ-02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-03",
+"to": "12미적Ⅰ-02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅰ-02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅰ-02-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅰ-02-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅰ-02-10",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅰ-03-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅱ-02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅱ-02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-04",
+"to": "12미적Ⅱ-02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-05",
+"to": "12미적Ⅱ-02-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-07",
+"to": "12미적Ⅰ-02-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-08",
+"to": "12미적Ⅰ-02-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-08",
+"to": "12미적Ⅱ-02-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-10",
+"to": "12미적Ⅰ-03-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-02-10",
+"to": "12미적Ⅱ-02-11",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-01",
+"to": "12미적Ⅰ-03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-01",
+"to": "12미적Ⅰ-03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-02",
+"to": "12미적Ⅰ-03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-02",
+"to": "12미적Ⅱ-03-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-03",
+"to": "12미적Ⅰ-03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-03",
+"to": "12미적Ⅱ-03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-04",
+"to": "12미적Ⅰ-03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-04",
+"to": "12미적Ⅰ-03-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅰ-03-05",
+"to": "12미적Ⅱ-03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-01-01",
+"to": "12미적Ⅱ-01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-01-01",
+"to": "12미적Ⅱ-01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-01-02",
+"to": "12미적Ⅱ-01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-01-03",
+"to": "12미적Ⅱ-01-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-01-04",
+"to": "12미적Ⅱ-01-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-01-04",
+"to": "12미적Ⅱ-03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-01",
+"to": "12미적Ⅱ-03-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-02",
+"to": "12미적Ⅱ-02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-03",
+"to": "12미적Ⅱ-03-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-04",
+"to": "12미적Ⅱ-02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-05",
+"to": "12미적Ⅱ-02-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-05",
+"to": "12미적Ⅱ-02-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-05",
+"to": "12미적Ⅱ-02-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-05",
+"to": "12미적Ⅱ-03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-06",
+"to": "12미적Ⅱ-02-11",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-06",
+"to": "12미적Ⅱ-03-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-07",
+"to": "12미적Ⅱ-02-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-02-09",
+"to": "12미적Ⅱ-02-10",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-03-01",
+"to": "12미적Ⅱ-03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-03-01",
+"to": "12미적Ⅱ-03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-03-02",
+"to": "12미적Ⅱ-03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-03-02",
+"to": "12미적Ⅱ-03-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12미적Ⅱ-03-05",
+"to": "12미적Ⅱ-03-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통01-03",
+"to": "12확통03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통02-01",
+"to": "12확통02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통02-01",
+"to": "12확통02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통02-01",
+"to": "12확통03-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통02-02",
+"to": "12확통02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통02-04",
+"to": "12확통02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통02-05",
+"to": "12확통02-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통02-06",
+"to": "12확통03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통03-01",
+"to": "12확통03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통03-02",
+"to": "12확통03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통03-03",
+"to": "12확통03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통03-04",
+"to": "12확통03-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통03-05",
+"to": "12확통03-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "12확통03-06",
+"to": "12확통03-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-01",
+"to": "9수01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-01",
+"to": "9수02-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-03",
+"to": "9수01-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-03",
+"to": "9수01-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-03",
+"to": "9수02-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-05",
+"to": "9수01-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-05",
+"to": "9수01-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-05",
+"to": "9수02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-07",
+"to": "10공수1-02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-07",
+"to": "9수01-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-07",
+"to": "9수01-10",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-07",
+"to": "9수02-20",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-07",
+"to": "9수03-15",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-08",
+"to": "9수01-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-10",
+"to": "10공수2-03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수01-10",
+"to": "12대수01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-01",
+"to": "9수02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-02",
+"to": "9수02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-02",
+"to": "9수02-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-02",
+"to": "9수02-15",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-03",
+"to": "9수02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-03",
+"to": "9수02-11",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-04",
+"to": "9수02-13",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-05",
+"to": "9수02-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-06",
+"to": "9수02-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-07",
+"to": "10공수2-03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-07",
+"to": "9수02-14",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-08",
+"to": "12대수01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-08",
+"to": "9수02-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-09",
+"to": "9수02-10",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-09",
+"to": "9수02-19",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-10",
+"to": "10공수1-01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-11",
+"to": "9수02-12",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-12",
+"to": "10공수1-02-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-13",
+"to": "10공수1-02-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-13",
+"to": "10공수1-02-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-13",
+"to": "9수02-17",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-14",
+"to": "10공수2-03-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-14",
+"to": "9수02-15",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-15",
+"to": "9수02-16",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-15",
+"to": "9수02-17",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-15",
+"to": "9수02-21",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-16",
+"to": "10공수2-01-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-17",
+"to": "9수02-18",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-19",
+"to": "10공수1-01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-19",
+"to": "10공수1-01-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-19",
+"to": "9수02-20",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-20",
+"to": "10공수1-02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-20",
+"to": "9수02-22",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-21",
+"to": "9수02-22",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-22",
+"to": "10공수1-02-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수02-22",
+"to": "10공수1-02-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-01",
+"to": "12기하02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-01",
+"to": "9수03-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-01",
+"to": "9수03-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-01",
+"to": "9수03-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-02",
+"to": "9수03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-03",
+"to": "9수03-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-04",
+"to": "9수03-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-04",
+"to": "9수03-11",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-04",
+"to": "9수03-12",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-05",
+"to": "9수03-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-06",
+"to": "12대수02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-06",
+"to": "9수03-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-07",
+"to": "9수03-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-09",
+"to": "9수03-10",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-12",
+"to": "9수03-13",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-13",
+"to": "9수03-14",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-13",
+"to": "9수03-15",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-15",
+"to": "10공수2-01-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-15",
+"to": "12기하02-02",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-15",
+"to": "9수03-16",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-15",
+"to": "9수03-18",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-16",
+"to": "12기하02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-16",
+"to": "12대수02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-16",
+"to": "9수03-17",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-17",
+"to": "12대수02-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수03-18",
+"to": "9수03-19",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-01",
+"to": "9수04-07",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-01",
+"to": "9수04-08",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-02",
+"to": "9수04-03",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-02",
+"to": "9수04-09",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-03",
+"to": "9수04-04",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-04",
+"to": "12확통03-05",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-05",
+"to": "10공수1-03-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-05",
+"to": "9수04-06",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-06",
+"to": "12확통02-01",
+"rel": "prerequisite",
+"curated": true
+},
+{
+"from": "9수04-07",
+"to": "12확통03-02",
+"rel": "prerequisite",
+"curated": true
+}
+]
+}
