@@ -859,6 +859,7 @@
           results.appendChild(h("div", { class: "sk-pick-row" + (on ? " linked" : ""), title: on ? "해제" : "연결", onClick: () => opts.onToggle(s.id) }, [
             h("span", { class: "sk-pick-mark" }, [on ? "✓" : "+"]),
             h("span", { class: "sk-pick-name" }, [s.name]),
+            h("span", { class: "sk-pick-code" }, [s.id]),
             on ? h("span", { class: "sk-pick-tag" }, ["연결됨"]) : null
           ]));
         });
@@ -967,7 +968,7 @@
             const open = state._prqPickerFor === s.id;
             const rowEls = [
               h("div", { class: "skill-edit-row" }, [
-                h("span", { class: "skbullet" }), h("span", { class: "se-name" }, [s.name]),
+                h("span", { class: "skbullet" }), h("span", { class: "se-name" }, [s.name]), h("span", { class: "se-code" }, [s.id]),
                 h("span", { class: "se-prq" + (open ? " on" : ""), title: "선수 수행능력 연결", onClick: () => { state._prqPickerFor = open ? null : s.id; state._prqQ = ""; renderPanel(); } }, ["🔗선수 " + (pre.length || "")]),
                 h("span", { class: "se-del", title: "수행능력 삭제", onClick: () => removeSkill(selN.id, s.id) }, ["✕"])
               ])
@@ -1052,7 +1053,7 @@
         ? skills.map((s) => {
             const open = state._openSkill === s.id;
             const row = h("div", { class: "skill clickable" + (open ? " open" : ""), onClick: () => { state._openSkill = open ? null : s.id; renderPanel(); } },
-              [h("span", { class: "skbullet" }), spanMath("se-m", s.name), h("span", { class: "sk-link-ic" }, [open ? "▾" : "🔗"])]);
+              [h("span", { class: "skbullet" }), spanMath("se-m", s.name), h("span", { class: "se-code" }, [s.id]), h("span", { class: "sk-link-ic" }, [open ? "▾" : "🔗"])]);
             if (!open) return row;
             const pre = SAGE.Edits.skillPrereqsOf(s.id);
             const items = pre.map((pid) => h("div", { class: "sk-conn-row" }, [spanMath("sk-conn-name", skillNameOf(pid)), h("span", { class: "sk-conn-code" }, [pid])]));

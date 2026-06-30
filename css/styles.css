@@ -185,6 +185,7 @@ body{
 .etab.on{ background:#fff; color:var(--ink); box-shadow:0 1px 4px rgba(44,52,44,.12); }
 .skill-edit-row{ display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:10px; background:var(--card); }
 .se-name{ flex:1; font-size:13px; font-weight:600; color:var(--ink2); line-height:1.4; }
+.se-code{ flex:none; font-size:10px; font-weight:700; color:var(--mut2); background:var(--tagbg); border-radius:6px; padding:2px 6px; letter-spacing:.2px; white-space:nowrap; }
 .se-del{ flex:0 0 auto; width:22px; height:22px; border-radius:7px; background:#F2E4DE; color:#9B4B33;
   font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .skill-add{ display:flex; gap:8px; margin-top:11px; }
