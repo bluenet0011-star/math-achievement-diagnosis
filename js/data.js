@@ -12,9 +12,11 @@
   // 도달도 임계값 (계획서 §11-5, 설정값으로 분리)
   const THRESHOLDS = { full: 0.9, partial: 0.5 };
 
-  function masteryFromRatio(ratio, attempted) {
+  function masteryFromRatio(ratio, attempted, total) {
     if (!attempted) return "none";
     if (ratio >= THRESHOLDS.full) return "full";
+    // 문항 5개 이상이면 '오답 1개까지' 완전 이해 인정 — 조작 실수(측정오차) 1회가 결손으로 오판되지 않게
+    if (total >= 5 && ratio >= (total - 1) / total - 1e-9) return "full";
     if (ratio >= THRESHOLDS.partial) return "partial";
     return "weak";
   }
@@ -132,7 +134,9 @@
 
     activityFor(standardId) {
       const list = this.activities.get(standardId);
-      return list && list.length ? list[0] : null;
+      if (!list || !list.length) return null;
+      // 선택 정책: primary 지정 > 스텝형(심층 활동) > 첫 번째 — 저작 활동이 사장되지 않도록
+      return list.find((a) => a.primary) || list.find((a) => a.flow === "stepper") || list[0];
     }
     activitiesForStandard(standardId) { return this.activities.get(standardId) || []; }
     allActivities() { const out = []; this.activities.forEach((l) => out.push.apply(out, l)); return out; }

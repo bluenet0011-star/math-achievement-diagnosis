@@ -186,8 +186,14 @@
     grade(ix, act) {
       const st = act._ix[ix.id], cfg = ix.config;
       if (!st || st.raw == null || String(st.raw).trim() === "") return false;
-      if (cfg.accept) { const v = normStr(st.raw); return [cfg.answer].concat(cfg.accept).some((a) => normStr(a) === v); }
-      return numEq(parseFrac(st.raw), Number(cfg.answer), cfg.tol);   // 분수=소수=약분 모두 정답
+      if (cfg.accept) {
+        const v = normStr(st.raw);
+        if ([cfg.answer].concat(cfg.accept).some((a) => normStr(a) === v)) return true;
+        // 문자열 불일치여도 수치로는 같을 수 있음(0.33 vs 1/3) → 수치 동치 폴백 (accept가 tol을 끄지 않도록)
+        const sv = parseFrac(st.raw);
+        return [cfg.answer].concat(cfg.accept).some((a) => numEq(sv, parseFrac(a), cfg.tol));
+      }
+      return numEq(parseFrac(st.raw), parseFrac(cfg.answer), cfg.tol);   // 분수=소수=약분 모두 정답 (answer도 분수 문자열 허용)
     }
   };
 
@@ -382,9 +388,11 @@
   };
 
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function normStr(x) { return String(x == null ? "" : x).replace(/\s/g, ""); }
+  // 유니코드 수학 기호 정규화(− × ÷) — 키보드 입력과 데이터 표기가 달라도 같게 채점
+  function normSym(s) { return String(s == null ? "" : s).replace(/[−–—]/g, "-").replace(/×/g, "*").replace(/÷/g, "/"); }
+  function normStr(x) { return normSym(x).replace(/\s/g, ""); }
   // 분수("1/2")·소수("0.5")·정수 → 숫자. 못 읽으면 NaN
-  function parseFrac(s) { s = String(s == null ? "" : s).trim().replace(/\s/g, ""); if (s === "") return NaN; if (/^[-+]?\d+\/[-+]?\d+$/.test(s)) { const p = s.split("/"); return Number(p[0]) / Number(p[1]); } return Number(s); }
+  function parseFrac(s) { s = normSym(s).trim().replace(/\s/g, ""); if (s === "") return NaN; if (/^[-+]?\d+(\.\d+)?\/[-+]?\d+(\.\d+)?$/.test(s)) { const p = s.split("/"); return Number(p[0]) / Number(p[1]); } return Number(s); }
   function numEq(a, b, tol) { return isFinite(a) && isFinite(b) && Math.abs(a - b) <= (tol == null ? 1e-9 : tol); }
   // 암시적 곱(2x, 2(x+1), )(  )을 명시(*)로 — math.js 파싱용
   function normExpr(s) {
@@ -525,6 +533,19 @@
     },
     grade(ix, act) {
       const st = act._ix[ix.id]; if (!st || !String(st.value).trim()) return false;
+      // reject: 문제에 주어진 원식 등 '수치로는 같지만 수행(형태 변환)이 안 된' 입력 차단 (인수분해·전개 베끼기 방지)
+      const norm = normExpr(normSym(st.value)).toLowerCase();
+      if ((ix.config.reject || []).some((r) => normExpr(normSym(r)).toLowerCase() === norm)) return false;
+      // requireForm: 'product'(인수분해 — 최상위가 곱/거듭제곱) · 'sum'(전개 — 최상위가 합/차) 형태 검사
+      if (ix.config.requireForm && typeof math !== "undefined") {
+        try {
+          let top = math.parse(normExpr(normSym(st.value)));
+          while (top.type === "ParenthesisNode") top = top.content;
+          const isProd = top.type === "OperatorNode" && (top.op === "*" || top.op === "^");
+          if (ix.config.requireForm === "product" && !isProd) return false;
+          if (ix.config.requireForm === "sum" && isProd) return false;
+        } catch (e) { /* 파싱 불가면 형태 검사는 생략(동치 검사로 판정) */ }
+      }
       return [ix.config.answer].concat(ix.config.accept || []).some((a) => exprEqual(st.value, a));
     }
   };
@@ -664,7 +685,7 @@
       const cfg = ix.config, xr = cfg.x || [0, 8], yr = cfg.y || [0, 8];
       const anchors = cfg.anchors || [], snap = cfg.snap || 1;
       const aLab = cfg.anchorLabel || "신호";
-      const st = (act._ix[ix.id] = { pt: (cfg.start ? cfg.start.slice() : [Math.round((xr[0] + xr[1]) / 2), Math.round((yr[0] + yr[1]) / 2)]) });
+      const st = (act._ix[ix.id] = { pt: (cfg.start ? cfg.start.slice() : [Math.round((xr[0] + xr[1]) / 2), Math.round((yr[0] + yr[1]) / 2)]), moved: false });
       const W = 360, H = 300, padL = 28, padB = 26;
       const X = (x) => padL + (x - xr[0]) / (xr[1] - xr[0]) * (W - padL - 10);
       const Y = (y) => (H - padB) - (y - yr[0]) / (yr[1] - yr[0]) * (H - padB - 10);
@@ -694,7 +715,7 @@
         const vx = (p.clientX - r.left) / r.width * W, vy = (p.clientY - r.top) / r.height * H;
         let dx = Math.round(invX(vx) / snap) * snap, dy = Math.round(invY(vy) / snap) * snap;
         dx = Math.max(xr[0], Math.min(xr[1], dx)); dy = Math.max(yr[0], Math.min(yr[1], dy));
-        st.pt = [dx, dy]; redraw();
+        st.pt = [dx, dy]; st.moved = true; redraw();
       }
       let drag = false;
       svg.addEventListener("mousedown", (e) => { drag = true; fromEvent(e); });
@@ -704,7 +725,7 @@
       svg.addEventListener("touchmove", (e) => { fromEvent(e); e.preventDefault(); }, { passive: false });
       box.appendChild(read); host.appendChild(box); redraw();
     },
-    grade(ix, act) { const st = act._ix[ix.id], t = ix.config.target, tol = ix.config.tolerance || 0.5; return !!(st && t && Math.abs(st.pt[0] - t[0]) <= tol && Math.abs(st.pt[1] - t[1]) <= tol); }
+    grade(ix, act) { const st = act._ix[ix.id], t = ix.config.target, tol = ix.config.tolerance || 0.5; return !!(st && st.moved && t && Math.abs(st.pt[0] - t[0]) <= tol && Math.abs(st.pt[1] - t[1]) <= tol); }   // moved: 무조작 자동 통과 차단
   };
 
   /* dist-sim: 표본을 반복 추출해 히스토그램이 종 모양으로 모이는 과정을 직접 관찰한다.

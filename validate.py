@@ -179,7 +179,118 @@ def main():
             if tf is not None and tt is not None and tf > tt:
                 warns.append(("W6", f"학년/단계 역행 간선: {fr}(tier{tf}) → {to}(tier{tt})"))
 
-    # ---- 활동 검사(E7)/고아(W4) ----
+    # ---- 수행능력 선수관계(skillPrereq) 검사(E9): 끊긴 skill id / 자기참조 ----
+    all_skill_ids = set()
+    for ids in skills_by_std.values():
+        all_skill_ids |= ids
+    for rel in manifest.get("skillPrereq", []):
+        data = load_json(rel)
+        if not data:
+            continue
+        for e in data.get("edges", []):
+            fr, to = e.get("from"), e.get("to")
+            if fr not in all_skill_ids:
+                errors.append(("E9", f"{rel}: skillPrereq from '{fr}' — 존재하지 않는 수행능력"))
+            if to not in all_skill_ids:
+                errors.append(("E9", f"{rel}: skillPrereq to '{to}' — 존재하지 않는 수행능력"))
+            if fr == to:
+                errors.append(("E9", f"{rel}: skillPrereq 자기참조 '{fr}'"))
+
+    # ---- 활동 검사(E7 확장: steps + interactions)/고아(W4)/조작 config 구조(E8) ----
+    VALID_TPL = {"stepwise", "interactive"}
+
+    def ft_pos(k):
+        m = re.search(r"(\d+)\s*-\s*(\d+)", re.sub(r"^r", "", str(k), flags=re.I))
+        return f"{m.group(1)}-{m.group(2)}" if m else None
+
+    def check_config(rel, aid, iid, kind, cfg):
+        """조작 부품 config가 실제 채점 계약(templates.js grade)과 맞는지 — 어긋나면 런타임에야 드러나므로 ERROR."""
+        E = lambda msg: errors.append(("E8", f"{rel}: {aid}/{iid} [{kind}] {msg}"))
+        if kind == "build-set":
+            vals = {str(it.get("val")) for it in cfg.get("items", [])}
+            tg = [str(t) for t in cfg.get("target", [])]
+            if not tg:
+                E("target 비어있음")
+            for t in tg:
+                if t not in vals:
+                    E(f"target '{t}' 가 items 에 없음")
+        elif kind == "order-seq":
+            vals = [str(it.get("val")) for it in cfg.get("items", [])]
+            order = [str(o) for o in cfg.get("order", [])]
+            if set(order) != set(vals) or len(order) != len(vals):
+                E("order 가 items 의 순열이 아님")
+        elif kind == "drag-match":
+            for i, p in enumerate(cfg.get("pairs", [])):
+                if not p.get("left") or not p.get("right"):
+                    E(f"pairs[{i}] left/right 누락")
+        elif kind == "compute":
+            if cfg.get("accept") is None:
+                ans = str(cfg.get("answer", "")).strip().replace("−", "-")
+                if not re.fullmatch(r"-?\d+(\.\d+)?(/-?\d+(\.\d+)?)?", ans):
+                    E(f"answer 비수치 '{cfg.get('answer')}' (accept 없이)")
+        elif kind == "expr":
+            if not str(cfg.get("answer", "")).strip():
+                E("answer 비어있음")
+            for bad in ["∫", "∑", "√", "sin", "cos", "tan", "log", "ln", "π"]:
+                if bad in str(cfg.get("answer", "")):
+                    E(f"answer 에 채점 불가 기호 '{bad}'")
+        elif kind == "slider":
+            if not cfg.get("preview"):
+                warns.append(("W7", f"{rel}: {aid}/{iid} [slider] preview 없음(그래프 미표시)"))
+            for s in cfg.get("sliders", []):
+                t, mn, mx = s.get("target"), s.get("min"), s.get("max")
+                step, init = s.get("step", 1), s.get("init", s.get("min"))
+                if t is None:
+                    E(f"slider '{s.get('key')}' target 없음"); continue
+                if not (mn <= t <= mx):
+                    E(f"slider '{s.get('key')}' target {t} ∉ [{mn},{mx}]")
+                if step and abs(((t - init) / step) - round((t - init) / step)) > 1e-6:
+                    E(f"slider '{s.get('key')}' target {t} 이 step {step} 격자에 없음(init {init})")
+                if init == t:
+                    E(f"slider '{s.get('key')}' init == target (무조작 통과·정답 노출)")
+        elif kind in ("grid-plot", "place-target"):
+            xr, yr = cfg.get("x", [0, 8]), cfg.get("y", [0, 8])
+            tgs = cfg.get("target", []) if kind == "grid-plot" else ([cfg.get("target")] if cfg.get("target") else [])
+            for p in tgs:
+                if not p:
+                    continue
+                if not (xr[0] <= p[0] <= xr[1] and yr[0] <= p[1] <= yr[1]):
+                    E(f"target {p} 좌표 범위 밖 x{xr} y{yr}")
+                if kind == "grid-plot" and (p[0] != int(p[0]) or p[1] != int(p[1])):
+                    E(f"target {p} 정수 격자점 아님")
+            if kind == "place-target":
+                for an in cfg.get("anchors", []):
+                    if not (xr[0] <= an[0] <= xr[1] and yr[0] <= an[1] <= yr[1]):
+                        E(f"anchor {an} 좌표 범위 밖")
+                t = cfg.get("target"); tol = cfg.get("tolerance", 0.5)
+                start = cfg.get("start") or [round((xr[0] + xr[1]) / 2), round((yr[0] + yr[1]) / 2)]
+                if t and abs(start[0] - t[0]) <= tol and abs(start[1] - t[1]) <= tol:
+                    E(f"시작 위치 {start} 가 target {t} 허용오차 안(정답 노출)")
+        elif kind == "fill-table":
+            rows, blanks = cfg.get("rows", []), cfg.get("blanks", [])
+            answers = cfg.get("answers", {})
+            cellvals = {str(c) for row in rows for c in row}
+            pos2key = {}
+            for b in blanks:
+                if b in cellvals:
+                    continue
+                p = ft_pos(b)
+                if p:
+                    pos2key[p] = b
+            rendered = set()
+            for r, row in enumerate(rows):
+                for c, cell in enumerate(row):
+                    if str(cell) in blanks:
+                        rendered.add(str(cell))
+                    elif pos2key.get(f"{r}-{c}"):
+                        rendered.add(pos2key[f"{r}-{c}"])
+            for ak in answers:
+                if ak not in rendered:
+                    E(f"answers 키 '{ak}' 에 해당하는 입력칸이 표에 없음")
+            for rk in rendered:
+                if rk not in answers:
+                    E(f"입력칸 '{rk}' 의 정답이 answers 에 없음")
+
     for rel in manifest.get("activities", []):
         data = load_json(rel)
         if not data:
@@ -190,13 +301,24 @@ def main():
             if std not in node_by_id:
                 errors.append(("E7", f"{rel}: 활동 '{aid}' standardId '{std}' 성취기준 없음"))
                 continue
+            tpl = act.get("templateType")
+            if tpl not in VALID_TPL:
+                errors.append(("E7", f"{rel}: 활동 '{aid}' templateType '{tpl}' 미지원 (렌더 불가)"))
             std_skills = skills_by_std.get(std, set())
             if not std_skills:
                 warns.append(("W4", f"{rel}: 활동 '{aid}' 대상 '{std}' 의 skills 비어있음 (채점 불가)"))
-            for i, step in enumerate(act.get("steps", [])):
-                sk = step.get("skillId")
-                if sk not in std_skills:
-                    errors.append(("E7", f"{rel}: 활동 '{aid}' step[{i}] skillId '{sk}' 가 '{std}' skills 에 없음"))
+            units = act.get("steps", []) or act.get("interactions", [])
+            if not units:
+                errors.append(("E7", f"{rel}: 활동 '{aid}' 채점 단위(steps/interactions) 없음"))
+            for i, u in enumerate(units):
+                sks = u.get("skillIds") if isinstance(u.get("skillIds"), list) else ([u.get("skillId")] if u.get("skillId") else [])
+                if not sks:
+                    errors.append(("E7", f"{rel}: 활동 '{aid}' unit[{i}] 수행능력 연결 없음"))
+                for sk in sks:
+                    if sk not in std_skills and sk not in all_skill_ids:
+                        errors.append(("E7", f"{rel}: 활동 '{aid}' unit[{i}] skillId '{sk}' 존재하지 않음"))
+                if "kind" in u:
+                    check_config(rel, aid, u.get("id", f"#{i}"), u.get("kind"), u.get("config", {}) or {})
 
     report(node_by_id, seen_edges)
 

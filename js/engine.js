@@ -32,16 +32,26 @@
       } else {
         scope = this.g.standardsInUnit(this.opts.unitId).map((n) => n.id);
       }
+      this.scope = scope;
       const tops = this.g.topStandards(scope);
       tops.forEach((id) => this._enqueue(id));
+      if (!this.queue.length) this._sweepOrphans();   // top들이 전부 활동 없음 → 범위 내 활동 보유 성취기준으로 시작
       return this;
     }
 
     _enqueue(id) {
       if (this.visited.has(id)) return;
-      if (!this.g.activityFor(id)) return; // 평가할 활동이 없으면 더 내려가지 않음
       this.visited.add(id);
-      this.queue.push(id);
+      if (this.g.activityFor(id)) { this.queue.push(id); return; }
+      // 활동이 없는 성취기준은 측정하지 않되, 선수개념으로 계속 내려가 활동 있는 후손을 찾는다(하강 중단 금지)
+      this.g.prerequisitesOf(id).forEach((pid) => this._enqueue(pid));
+    }
+
+    // 큐 소진 시: 범위 내에 있으면서 어떤 경로로도 닿지 않은 '고아' 성취기준(활동 보유)을 후순위로 측정
+    _sweepOrphans() {
+      (this.scope || []).forEach((id) => {
+        if (!this.visited.has(id) && this.g.activityFor(id)) { this.visited.add(id); this.queue.push(id); }
+      });
     }
 
     isDone() { return this.ptr >= this.queue.length; }
@@ -65,7 +75,7 @@
       const attempted = stepResults.length > 0;            // C-3: step이 없으면 '미평가'
       const passed = stepResults.filter((r) => r === "pass").length;
       const ratio = attempted ? passed / stepResults.length : 0;
-      const mastery = masteryFromRatio(ratio, attempted);  // 미응시 → 'none'(weak로 오판 방지)
+      const mastery = masteryFromRatio(ratio, attempted, stepResults.length);  // 미응시 → 'none' · 문항 수 반영(오답 1개 흡수)
 
       const units = unitsOf(act);
       stepResults.forEach((r, i) => {
@@ -81,6 +91,7 @@
         this._backtrackSteps(cur.standardId, act, stepResults); // 결손 → step별 정밀 역추적(B5/C-1)
       }
       this.ptr++;
+      if (this.isDone()) this._sweepOrphans();  // 적응 경로가 끝나면 범위 내 미도달 성취기준 회수
     }
 
     skip() {
@@ -94,6 +105,7 @@
       this.path.push(cur.standardId);
       this._backtrack(cur.standardId);          // 포기 → 전체 역추적(B5)
       this.ptr++;
+      if (this.isDone()) this._sweepOrphans();
     }
 
     _backtrack(standardId) {
@@ -117,9 +129,18 @@
         const pr = steps[i] && steps[i].prereq;
         if (Array.isArray(pr) && pr.length) {
           pr.forEach((pid) => { if (validPre.has(pid)) targeted.add(pid); });
-        } else {
-          needFull = true;                        // step별 매핑 부재 → 전체 폴백
+          return;
         }
+        // prereq 미선언 → 수행능력 선수관계(skillPrereq)에서 파생: 틀린 미션의 skill → 그 선수 skill → 소속 성취기준
+        let derived = false;
+        skillIdsOf(steps[i]).forEach((sk) => {
+          const pres = (window.SAGE.Edits && window.SAGE.Edits.skillPrereqsOf) ? window.SAGE.Edits.skillPrereqsOf(sk) : [];
+          pres.forEach((psk) => {
+            const pstd = String(psk).replace(/-[a-z]$/i, "");
+            if (pstd !== standardId && validPre.has(pstd)) { targeted.add(pstd); derived = true; }
+          });
+        });
+        if (!derived) needFull = true;            // 파생 불가 → 전체 폴백(무회귀)
       });
       if (needFull) this._backtrack(standardId);
       targeted.forEach((pid) => this._enqueue(pid));
@@ -157,13 +178,14 @@
         skipped: this.results[id].skipped
       }));
 
-      // 보강 추천 = 가장 약한 성취기준(선수개념 우선). 모두 완전 이해면 추천 없음.
+      // 보강 추천 = 가장 약한 성취기준. 동률이면 경로상 '나중'(=더 깊이 역추적된 선수개념)을 고른다 — 결손의 뿌리 우선.
       let rec = null, low = 999;
       this.path.forEach((id) => {
         const w = MASTERY[this.results[id].mastery].weight;
-        if (w < low) { low = w; rec = this.g.node(id); }
+        if (w <= low) { low = w; rec = this.g.node(id); }
       });
-      const allMastered = low >= MASTERY.full.weight;
+      // 아무것도 측정하지 못한 진단(빈 경로)은 '모두 이해'가 아니다 — 모순 리포트 방지
+      const allMastered = this.path.length > 0 && low >= MASTERY.full.weight;
 
       return { overall, perStandard, recommendation: allMastered ? null : rec, allMastered };
     }
@@ -171,13 +193,13 @@
     // localStorage 직렬화 (B9 이어하기)
     serialize() {
       return {
-        opts: this.opts, queue: this.queue, visited: [...this.visited],
+        opts: this.opts, queue: this.queue, visited: [...this.visited], scope: this.scope || [],
         results: this.results, skillResults: this.skillResults, path: this.path, ptr: this.ptr
       };
     }
     static restore(graph, data) {
       const d = new Diagnosis(graph, data.opts);
-      d.queue = data.queue; d.visited = new Set(data.visited);
+      d.queue = data.queue; d.visited = new Set(data.visited); d.scope = data.scope || [];
       d.results = data.results; d.skillResults = data.skillResults;
       d.path = data.path; d.ptr = data.ptr;
       return d;

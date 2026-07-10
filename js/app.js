@@ -126,7 +126,9 @@
   }
 
   /* ---------- start screen ---------- */
-  function firstUnitOf(subjId) { const u = graph.childrenOf(subjId).filter((n) => n.type === "unit"); return u.length ? u[0].id : subjId; }
+  function unitHasActivity(unitId) { return graph.standardsInUnit(unitId).some((n) => graph.activityFor(n.id)); }
+  function unitsWithActivities(subjId) { return graph.childrenOf(subjId).filter((n) => n.type === "unit" && unitHasActivity(n.id)); }
+  function firstUnitOf(subjId) { const withAct = unitsWithActivities(subjId); if (withAct.length) return withAct[0].id; const u = graph.childrenOf(subjId).filter((n) => n.type === "unit"); return u.length ? u[0].id : subjId; }
   function subjectsWithActivities() { return graph.nodesByType("subject").filter((s) => graph.standardsInSubject(s.id).some((n) => graph.activityFor(n.id))); }
 
   function startScreen() {
@@ -134,7 +136,9 @@
     const subjects = subjectsWithActivities();
     // 활동이 없는 과목이 선택돼 있으면 진단 가능한 첫 과목으로 보정
     if (subjects.length && !subjects.some((s) => s.id === state.subjectId)) { state.subjectId = subjects[0].id; state.unitId = firstUnitOf(state.subjectId); }
-    const units = graph.childrenOf(state.subjectId).filter((n) => n.type === "unit");
+    // 활동(문항)이 준비된 단원만 노출 — 빈 단원 선택 시 '측정 없이 모두 이해' 모순 방지
+    const units = unitsWithActivities(state.subjectId);
+    if (units.length && !units.some((u) => u.id === state.unitId)) state.unitId = units[0].id;
     const saved = loadSaved();
 
     const gradeRow = h("div", { class: "chip-row" }, grades.map((gd) =>
@@ -180,6 +184,7 @@
   function startDiagnosis() {
     const opts = { mode: state.mode, subjectId: state.subjectId };
     if (state.mode === "general") opts.unitId = state.unitId;   // precise는 과목 전체라 unitId 무시
+    state._stp = null;   // 이전 시도의 스텝형 진행이 새 진단에 섞이지 않도록
     state.dx = new SAGE.Diagnosis(graph, opts).start();
     const first = state.dx.current();
     state.selNode = first ? first.standardId : state.selNode;
@@ -189,7 +194,12 @@
   }
   function resume() {
     const saved = loadSaved(); if (!saved) return;
+    // 저장 이후 콘텐츠가 개편됐으면 복원하지 않음 — 남은 큐의 성취기준·활동이 전부 유효해야 함
+    const q = (saved.dx && saved.dx.queue) || [], ptr = (saved.dx && saved.dx.ptr) || 0;
+    const stale = q.slice(ptr).some((id) => !graph.node(id) || !graph.activityFor(id));
+    if (stale) { clearSave(); alert("저장된 진단 이후 콘텐츠가 갱신되어 이어할 수 없어요. 새로 시작해 주세요."); render(); return; }
     Object.assign(state, { grade: saved.grade, subjectId: saved.subjectId, unitId: saved.unitId, mode: saved.mode, selNode: saved.selNode });
+    state._stp = null;
     state.dx = SAGE.Diagnosis.restore(graph, saved.dx);
     state.screen = saved.screen === "start" ? "map" : saved.screen;
     render();
@@ -234,9 +244,9 @@
   }
   function refreshOverview() {}
   function enterDetail(subjId) { state.view = "detail"; state.detailSubject = subjId; state.subjectId = subjId; state.unitId = firstUnitOf(subjId); state.subjectTree = true; render(); }
-  function goHome() { state.editMode = false; state._enterEdit = false; state.dx = null; state.screen = "start"; render(); }
+  function goHome() { state.editMode = false; state._enterEdit = false; state.dx = null; state._stp = null; state.screen = "start"; render(); }
   // 관리자(교사) 진입 — 전용 활동 관리 화면 (나중에 URL로 분리 예정)
-  function goAdmin() { state.dx = null; state.editMode = false; state.screen = "admin"; state.adminView = "list"; state.adminAct = null; state._pickOpen = null; render(); }
+  function goAdmin() { state.dx = null; state._stp = null; state.editMode = false; state.screen = "admin"; state.adminView = "list"; state.adminAct = null; state._pickOpen = null; render(); }
   // 계통도 편집(선수관계·세부 수행능력) — 관리자 화면에서 진입
   function goAdminGraph() {
     state.dx = null; state.editMode = false; state.subjectTree = true; state.detailSubject = state.subjectId;
@@ -1141,13 +1151,14 @@
       circ + '" stroke-dashoffset="' + offset + '" transform="rotate(-90 37 37)"></circle>';
     return svg;
   }
-  function restart() { clearSave(); state.dx = null; state.selNode = "12확통02-03"; state.screen = "start"; render(); }
+  function restart() { clearSave(); state.dx = null; state._stp = null; state.selNode = "12확통02-03"; state.screen = "start"; render(); }
 
   /* ---------- activity screen ---------- */
   function activityScreen() {
     const dx = state.dx;
     if (!dx || dx.isDone()) { finishToResult(); return h("div"); }
-    const cur = dx.current(), act = cur.activity;
+    const cur = dx.current(), act = cur && cur.activity;
+    if (!cur || !act || !cur.node) { dx.ptr++; setTimeout(render, 0); return h("div"); }   // 깨진 항목은 건너뜀(복원 데이터 방어)
     const units = act.steps || act.interactions || [];
     const localSkills = cur.node.skills || [];
     const nameOf = (id) => {
