@@ -903,9 +903,36 @@
     const clone = JSON.parse(JSON.stringify(a));
     const std = graph.node(clone.standardId);
     (clone.steps || []).forEach((s) => { const sk = std && std.skills && std.skills.find((k) => k.id === s.skillId); s.skillName = sk ? sk.name : ""; });
+    (clone.interactions || []).forEach((ix) => { const ids = Array.isArray(ix.skillIds) ? ix.skillIds : (ix.skillId ? [ix.skillId] : []); ix.skillNames = ids.map(skillNameOf); });
     const host = h("div", { class: "preview-host" });
     const tpl = SAGE.Templates[clone.templateType];
-    const draw = () => { host.innerHTML = ""; if (tpl && tpl.render) tpl.render(clone, host); else host.textContent = "미리보기를 지원하지 않는 활동 형식입니다."; };
+    const pstep = { i: 0, submitted: false, lastPass: null };
+    const draw = () => {
+      host.innerHTML = "";
+      if (clone.flow === "stepper" && tpl && tpl.renderOne) {
+        const units = clone.interactions || [], ix = units[pstep.i];
+        const dots = h("div", { class: "stp-dots" }, units.map((u, k) => h("span", { class: "stp-dot" + (k < pstep.i ? " done" : (k === pstep.i ? " cur" : "")) })));
+        const body = h("div", {});
+        if (!pstep.submitted) tpl.renderOne(clone, body, pstep.i);
+        else {
+          if (ix.prompt) body.appendChild(hMath("stp-recap", ix.prompt));
+          body.appendChild(h("div", { class: "stp-fb " + (pstep.lastPass ? "ok" : "no") }, [
+            h("div", { class: "stp-fb-h" }, [pstep.lastPass ? "✓ 정확해요" : "✗ 다시 살펴봐요"]),
+            ix.explain ? hMath("stp-fb-x", ix.explain) : null]));
+        }
+        const btns = !pstep.submitted
+          ? [h("div", { class: "btn primary grow", onClick: () => { pstep.lastPass = tpl.gradeOne(clone, pstep.i); pstep.submitted = true; draw(); } }, ["제출"]),
+             h("div", { class: "btn light", onClick: draw }, ["↺ 초기화"])]
+          : (pstep.i >= units.length - 1
+              ? [h("div", { class: "btn primary grow", onClick: () => { pstep.i = 0; pstep.submitted = false; draw(); } }, ["↺ 처음부터"])]
+              : [h("div", { class: "btn primary grow", onClick: () => { pstep.i++; pstep.submitted = false; draw(); } }, ["다음 미션 →"])]);
+        host.appendChild(h("div", { class: "act-inner" }, [
+          h("div", { class: "act-cat", style: "text-align:center;margin-bottom:6px" }, ["미션 " + (pstep.i + 1) + " / " + units.length]),
+          (ix.skillNames && ix.skillNames.length) ? h("div", { class: "stp-skills" }, ix.skillNames.map((nm) => h("span", { class: "ix-skill" }, [nm]))) : null,
+          dots, body, h("div", { class: "act-btns" }, btns)]));
+      } else if (tpl && tpl.render) tpl.render(clone, host);
+      else host.textContent = "미리보기를 지원하지 않는 활동 형식입니다.";
+    };
     const overlay = h("div", { class: "preview-overlay" }, [
       h("div", { class: "preview-modal" }, [
         h("div", { class: "preview-top" }, [h("div", { class: "preview-title" }, [clone.title || clone.id]),
@@ -1134,6 +1161,9 @@
       s.skillName = s.skillNames[0] || "수행능력";   // stepwise 호환
     });
 
+    // 스텝형 활동: 한 화면에 미션 하나, 제출하면 다음으로
+    if (act.flow === "stepper" && act.templateType === "interactive") return stepperScreen(dx, cur, act, units);
+
     const host = h("div", { class: "widget" });
     SAGE.Templates[act.templateType].render(act, host);
     const isBacktrack = dx.ptr > 0 && !isOriginTop(cur.standardId);
@@ -1161,6 +1191,44 @@
   function onSkip() { state.dx.skip(); afterAnswer(); }
   function afterAnswer() { if (state.dx.isDone()) finishToResult(); else render(); }
   function finishToResult() { state.screen = "result"; state.selNode = state.dx.path[0] || state.selNode; render(); }
+
+  /* ---------- 스텝형: 미션 하나씩, 제출→피드백→다음 ---------- */
+  function stepperScreen(dx, cur, act, units) {
+    if (!state._stp || state._stp.actId !== act.id) state._stp = { actId: act.id, i: 0, results: [], submitted: false, lastPass: null };
+    const st = state._stp;
+    if (st.i >= units.length) { const results = units.map((u, k) => st.results[k] || "fail"); state._stp = null; dx.submit(results); afterAnswer(); return h("div"); }
+    const ix = units[st.i];
+    const host = h("div", { class: "widget" });
+    if (!st.submitted) SAGE.Templates.interactive.renderOne(act, host, st.i);
+    else {
+      if (ix.prompt) host.appendChild(hMath("stp-recap", ix.prompt));
+      host.appendChild(h("div", { class: "stp-fb " + (st.lastPass ? "ok" : "no") }, [
+        h("div", { class: "stp-fb-h" }, [st.lastPass ? "✓ 정확해요" : "✗ 다시 살펴봐요"]),
+        ix.explain ? hMath("stp-fb-x", ix.explain) : null
+      ]));
+    }
+    const dots = h("div", { class: "stp-dots" }, units.map((u, k) => h("span", { class: "stp-dot" + (k < st.i ? " done" : (k === st.i ? " cur" : "")) })));
+    const btns = !st.submitted
+      ? [h("div", { class: "btn primary grow", onClick: () => stepSubmit(act) }, ["제출"]),
+         h("div", { class: "btn light", title: "이 미션 입력 비우기", onClick: () => render() }, ["↺ 초기화"]),
+         h("div", { class: "btn ghost", onClick: () => stepSkip(act) }, ["모르겠어요"])]
+      : [h("div", { class: "btn primary grow", onClick: () => stepNext(act, units) }, [st.i >= units.length - 1 ? "탐사 완료 →" : "다음 미션 →"])];
+    return h("div", { class: "activity" }, [h("div", { class: "act-inner" }, [
+      h("div", { class: "act-tag-row" }, [h("span", { class: "act-tag" }, [cur.node.code]), h("span", { class: "act-cat" }, ["미션 " + (st.i + 1) + " / " + units.length])]),
+      h("h2", { class: "act-title" }, [act.title || cur.node.name]),
+      (ix.skillNames && ix.skillNames.length) ? h("div", { class: "stp-skills" }, ix.skillNames.map((nm) => h("span", { class: "ix-skill" }, [nm]))) : null,
+      dots, host,
+      h("div", { class: "act-btns" }, btns),
+      h("div", { class: "diag-hint" }, ["하나의 탐사입니다 — 각 미션의 산출물이 다음 미션으로 이어집니다."])
+    ])]);
+  }
+  function stepSubmit(act) { const st = state._stp; st.results[st.i] = SAGE.Templates.interactive.gradeOne(act, st.i) ? "pass" : "fail"; st.lastPass = st.results[st.i] === "pass"; st.submitted = true; render(); }
+  function stepSkip(act) { const st = state._stp; st.results[st.i] = "fail"; st.lastPass = false; st.submitted = true; render(); }
+  function stepNext(act, units) {
+    const st = state._stp; st.i++; st.submitted = false; st.lastPass = null;
+    if (st.i >= units.length) { const results = units.map((u, k) => st.results[k] || "fail"); state._stp = null; state.dx.submit(results); afterAnswer(); }
+    else render();
+  }
 
   /* ---------- boot ---------- */
   async function boot() {

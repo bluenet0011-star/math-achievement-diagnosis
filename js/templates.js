@@ -356,6 +356,28 @@
         return kind && kind.grade(ix, activity) ? "pass" : "fail";
       });
       return { stepResults, passed: stepResults.length > 0 && stepResults.every((r) => r === "pass") };
+    },
+    // 스텝형: 활동의 단일 미션(interaction)만 렌더. act._ix는 누적 유지(현재 미션만 새로 세팅됨).
+    renderOne(activity, host, index) {
+      host.innerHTML = "";
+      activity._ix = activity._ix || {};
+      const ix = (activity.interactions || [])[index];
+      if (!ix) return;
+      const card = el("div", "ix-card");
+      const head = el("div", "ix-head");
+      head.appendChild(el("span", "ix-num", String(index + 1)));
+      (ix.skillNames || []).forEach((nm) => head.appendChild(el("span", "ix-skill", nm)));
+      card.appendChild(head);
+      if (ix.prompt) card.appendChild(mathEl("div", "ix-prompt", ix.prompt));
+      const body = el("div", "ix-body");
+      const kind = Kinds[ix.kind];
+      if (kind) kind.render(ix, body, activity); else body.appendChild(el("div", "ix-prompt", "(알 수 없는 조작 유형: " + ix.kind + ")"));
+      card.appendChild(body); host.appendChild(card);
+    },
+    // 스텝형: 단일 미션 채점
+    gradeOne(activity, index) {
+      const ix = (activity.interactions || [])[index]; const kind = ix && Kinds[ix.kind];
+      return !!(kind && kind.grade(ix, activity));
     }
   };
 
@@ -683,6 +705,191 @@
       box.appendChild(read); host.appendChild(box); redraw();
     },
     grade(ix, act) { const st = act._ix[ix.id], t = ix.config.target, tol = ix.config.tolerance || 0.5; return !!(st && t && Math.abs(st.pt[0] - t[0]) <= tol && Math.abs(st.pt[1] - t[1]) <= tol); }
+  };
+
+  /* dist-sim: 표본을 반복 추출해 히스토그램이 종 모양으로 모이는 과정을 직접 관찰한다.
+     mode:"normal" → N(mu,sigma)에서 측정값 표본추출 / mode:"binomial" → B(n,p) 성공수 표본추출 + N(np,npq) 겹치기.
+     config: { mode, mu, sigma, p, n, nList:[..], need, overlay } · grade: maxReached >= need (탐사 완수 게이트) */
+  Kinds["dist-sim"] = {
+    render(ix, host, act) {
+      const cfg = ix.config || {}, mode = cfg.mode || "normal", need = cfg.need || 200, p = (cfg.p != null ? cfg.p : 0.5);
+      const st = (act._ix[ix.id] = { total: 0, data: [], maxReached: 0, n: (cfg.nList ? cfg.nList[0] : (cfg.n || 20)) });
+      const W = 340, H = 190, padL = 30, padB = 22;
+      const wrap = el("div", "ix-dsim");
+      const stage = el("div", "dsim-stage"); stage.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '"></svg>'; const svg = stage.querySelector("svg");
+      const stat = el("div", "dsim-stat");
+      wrap.appendChild(stage); wrap.appendChild(stat);
+      function gauss(mu, sig) { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return mu + sig * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+      function sampleOne() { if (mode === "binomial") { let c = 0; for (let k = 0; k < st.n; k++) if (Math.random() < p) c++; return c; } return gauss(cfg.mu || 0, cfg.sigma || 1); }
+      function binning() {
+        let lo, hi, nb, binW;
+        if (mode === "binomial") { lo = -0.5; hi = st.n + 0.5; nb = st.n + 1; binW = 1; }
+        else { const mu = cfg.mu || 0, sg = cfg.sigma || 1; lo = mu - 4 * sg; hi = mu + 4 * sg; nb = 24; binW = (hi - lo) / nb; }
+        const counts = new Array(nb).fill(0);
+        st.data.forEach((x) => { let bi = Math.floor((x - lo) / binW); if (bi < 0) bi = 0; if (bi >= nb) bi = nb - 1; counts[bi]++; });
+        return { lo, hi, nb, binW, counts };
+      }
+      function redraw() {
+        const b = binning(), maxc = Math.max(1, ...b.counts);
+        const X = (x) => padL + (x - b.lo) / (b.hi - b.lo) * (W - padL - 8);
+        const Y = (c) => (H - padB) - c / (maxc * 1.12) * (H - padB - 8);
+        let s = svgLine(padL, Y(0), W - 4, Y(0), "#9DB39A", 1.2);
+        for (let i = 0; i < b.nb; i++) {
+          if (!b.counts[i]) continue;
+          const x0 = X(b.lo + i * b.binW), x1 = X(b.lo + (i + 1) * b.binW), w = Math.max(1, x1 - x0 - 1);
+          s += '<rect x="' + (x0 + 0.5).toFixed(1) + '" y="' + Y(b.counts[i]).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(0, (H - padB) - Y(b.counts[i])).toFixed(1) + '" fill="#7CA0C9" rx="1"/>';
+        }
+        if (cfg.overlay !== false && st.total > 0) {
+          let mu, sg;
+          if (mode === "binomial") { mu = st.n * p; sg = Math.sqrt(st.n * p * (1 - p)) || 0.5; }
+          else { mu = cfg.mu || 0; sg = cfg.sigma || 1; }
+          const pts = [];
+          for (let k = 0; k <= 80; k++) { const x = b.lo + (b.hi - b.lo) * k / 80; const dens = 1 / (sg * Math.sqrt(2 * Math.PI)) * Math.exp(-((x - mu) * (x - mu)) / (2 * sg * sg)); pts.push(X(x).toFixed(1) + "," + Y(dens * st.total * b.binW).toFixed(1)); }
+          s += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="#C9772E" stroke-width="2.2"/>';
+        }
+        svg.innerHTML = s;
+        stat.innerHTML = "";
+        stat.appendChild(el("span", "dsim-pill" + (st.maxReached >= need ? " ok" : ""), "표본 " + st.total + (st.maxReached >= need ? " ✓" : " / " + need)));
+        if (mode === "binomial") { stat.appendChild(el("span", "dsim-pill", "n = " + st.n)); stat.appendChild(el("span", "dsim-pill", "np = " + (st.n * p).toFixed(1))); stat.appendChild(el("span", "dsim-pill", "npq = " + (st.n * p * (1 - p)).toFixed(2))); }
+        else if (st.total > 0) { const m = st.data.reduce((a, c) => a + c, 0) / st.total, v = st.data.reduce((a, c) => a + (c - m) * (c - m), 0) / st.total; stat.appendChild(el("span", "dsim-pill", "표본평균 ≈ " + m.toFixed(2))); stat.appendChild(el("span", "dsim-pill", "표본표준편차 ≈ " + Math.sqrt(v).toFixed(2))); }
+      }
+      function add(k) { for (let i = 0; i < k; i++) st.data.push(sampleOne()); st.total += k; st.maxReached = Math.max(st.maxReached, st.total); redraw(); }
+      const btns = el("div", "dsim-btns");
+      if (mode === "binomial" && cfg.nList) cfg.nList.forEach((nv) => { const bn = el("button", "dsim-nbtn" + (nv === st.n ? " on" : ""), "n=" + nv); bn.type = "button"; bn.onclick = () => { st.n = nv; st.data = []; st.total = 0; [...btns.querySelectorAll(".dsim-nbtn")].forEach((e) => e.classList.toggle("on", e.textContent === "n=" + nv)); redraw(); }; btns.appendChild(bn); });
+      [["+10", 10], ["+100", 100], ["+1000", 1000]].forEach((kv) => { const bb = el("button", "ix-sim-roll" + (kv[1] > 10 ? " alt" : ""), "표본 " + kv[0]); bb.type = "button"; bb.onclick = () => add(kv[1]); btns.appendChild(bb); });
+      wrap.appendChild(btns); host.appendChild(wrap); redraw();
+    },
+    grade(ix, act) { const st = act._ix[ix.id]; const need = (ix.config && ix.config.need) || 200; return !!(st && st.maxReached >= need); }
+  };
+
+  function gaussSample(mu, sig) { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return mu + sig * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+  /* pond: 물고기(또는 유전자 동전)를 직접 클릭/그물로 '잡아' 표본을 만들고 히스토그램을 쌓는다.
+     mode:"normal"(N(mu,sigma) 몸길이) / "binomial"(B(n,p) 켜진 수, nList로 n↑). grade: maxReached>=need. */
+  Kinds["pond"] = {
+    render(ix, host, act) {
+      const cfg = ix.config || {}, mode = cfg.mode || "normal", need = cfg.need || 40, p = (cfg.p != null ? cfg.p : 0.5);
+      const st = (act._ix[ix.id] = { caught: 0, data: [], maxReached: 0, n: (cfg.nList ? cfg.nList[0] : (cfg.n || 20)) });
+      const PW = 340, PH = 110, HW = 340, HH = 120;
+      const wrap = el("div", "ix-pond");
+      const pond = el("div", "pond-water"); pond.innerHTML = '<svg viewBox="0 0 ' + PW + ' ' + PH + '"></svg>'; const psvg = pond.querySelector("svg");
+      const stat = el("div", "dsim-stat");
+      const hist = el("div", "pond-hist"); hist.innerHTML = '<svg viewBox="0 0 ' + HW + ' ' + HH + '"></svg>'; const hsvg = hist.querySelector("svg");
+      const col = mode === "binomial" ? "#C9A24A" : "#5B86B0";
+      function sampleOne() { if (mode === "binomial") { let c = 0; for (let k = 0; k < st.n; k++) if (Math.random() < p) c++; return c; } return gaussSample(cfg.mu || 0, cfg.sigma || 1); }
+      function drawHist() {
+        let lo, hi, nb, bw;
+        if (mode === "binomial") { lo = -0.5; hi = st.n + 0.5; nb = st.n + 1; bw = 1; } else { const mu = cfg.mu || 0, sg = cfg.sigma || 1; lo = mu - 4 * sg; hi = mu + 4 * sg; nb = 22; bw = (hi - lo) / nb; }
+        const counts = new Array(nb).fill(0); st.data.forEach((x) => { let b = Math.floor((x - lo) / bw); if (b < 0) b = 0; if (b >= nb) b = nb - 1; counts[b]++; });
+        const maxc = Math.max(1, ...counts), padB = 16;
+        const X = (x) => 4 + (x - lo) / (hi - lo) * (HW - 8), Y = (c) => (HH - padB) - c / (maxc * 1.12) * (HH - padB - 6);
+        let s = svgLine(4, Y(0), HW - 4, Y(0), "#9DB39A", 1.2);
+        for (let i = 0; i < nb; i++) { if (!counts[i]) continue; const x0 = X(lo + i * bw), x1 = X(lo + (i + 1) * bw); s += '<rect x="' + (x0 + 0.5).toFixed(1) + '" y="' + Y(counts[i]).toFixed(1) + '" width="' + Math.max(1, x1 - x0 - 1).toFixed(1) + '" height="' + Math.max(0, (HH - padB) - Y(counts[i])).toFixed(1) + '" rx="1" fill="' + col + '"/>'; }
+        if (cfg.overlay !== false && st.caught > 0) { let mu, sg; if (mode === "binomial") { mu = st.n * p; sg = Math.sqrt(st.n * p * (1 - p)) || 0.5; } else { mu = cfg.mu || 0; sg = cfg.sigma || 1; } const pts = []; for (let k = 0; k <= 80; k++) { const x = lo + (hi - lo) * k / 80; const d = 1 / (sg * Math.sqrt(2 * Math.PI)) * Math.exp(-((x - mu) * (x - mu)) / (2 * sg * sg)); pts.push(X(x).toFixed(1) + "," + Y(d * st.caught * bw).toFixed(1)); } s += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="#C9772E" stroke-width="2"/>'; }
+        hsvg.innerHTML = s;
+      }
+      function updateStat() {
+        stat.innerHTML = "";
+        stat.appendChild(el("span", "dsim-pill" + (st.maxReached >= need ? " ok" : ""), "잡은 수 " + st.caught + (st.maxReached >= need ? " ✓" : " / " + need)));
+        if (mode === "binomial") { stat.appendChild(el("span", "dsim-pill", "n = " + st.n)); stat.appendChild(el("span", "dsim-pill", "np = " + (st.n * p).toFixed(1))); stat.appendChild(el("span", "dsim-pill", "npq = " + (st.n * p * (1 - p)).toFixed(2))); }
+        else if (st.caught > 0) { const m = st.data.reduce((a, c) => a + c, 0) / st.caught, v = st.data.reduce((a, c) => a + (c - m) * (c - m), 0) / st.caught; stat.appendChild(el("span", "dsim-pill", "평균 ≈ " + m.toFixed(1))); stat.appendChild(el("span", "dsim-pill", "표준편차 ≈ " + Math.sqrt(v).toFixed(1))); }
+      }
+      function spawnFish() {
+        let s = '<rect x="0" y="0" width="' + PW + '" height="' + PH + '" rx="10" fill="#E7F0F5"/>';
+        for (let i = 0; i < 9; i++) {
+          const x = (14 + Math.random() * (PW - 34)).toFixed(0), y = (14 + Math.random() * (PH - 28)).toFixed(0), fl = Math.random() < 0.5 ? -1 : 1, dur = (2.4 + Math.random() * 2).toFixed(1), del = (Math.random() * 1.5).toFixed(1);
+          s += '<g class="pf" transform="translate(' + x + ',' + y + ')"><g class="pf-b" style="animation:bob ' + dur + 's ease-in-out ' + del + 's infinite alternate" transform="scale(' + fl + ',1)">' +
+            (mode === "binomial"
+              ? '<circle r="8" fill="' + col + '"/><text x="0" y="3.5" font-size="9" text-anchor="middle" fill="#fff" font-weight="800">⚙</text>'
+              : '<ellipse rx="9" ry="5" fill="' + col + '"/><polygon points="8,0 14,-5 14,5" fill="' + col + '"/><circle cx="-4" cy="-1" r="1.4" fill="#fff"/>') +
+            '</g></g>';
+        }
+        psvg.innerHTML = s;
+        [...psvg.querySelectorAll(".pf")].forEach((g) => { g.style.cursor = "pointer"; g.onclick = () => { catchN(1); }; });
+      }
+      function catchN(k) { for (let i = 0; i < k; i++) st.data.push(sampleOne()); st.caught += k; st.maxReached = Math.max(st.maxReached, st.caught); drawHist(); updateStat(); spawnFish(); }
+      const btns = el("div", "dsim-btns");
+      if (mode === "binomial" && cfg.nList) cfg.nList.forEach((nv) => { const bn = el("button", "dsim-nbtn" + (nv === st.n ? " on" : ""), "n=" + nv); bn.type = "button"; bn.onclick = () => { st.n = nv; st.data = []; st.caught = 0; [...btns.querySelectorAll(".dsim-nbtn")].forEach((e) => e.classList.toggle("on", e.textContent === "n=" + nv)); drawHist(); updateStat(); }; btns.appendChild(bn); });
+      const net = el("button", "ix-sim-roll alt", mode === "binomial" ? "⚙ 한 번에 +20" : "🎣 그물 던지기 (+20)"); net.type = "button"; net.onclick = () => catchN(20); btns.appendChild(net);
+      wrap.appendChild(el("div", "pond-hint", mode === "binomial" ? "동전(유전자)을 클릭하거나 한 번에 여러 번 던져 '켜진 수'를 쌓으세요" : "물고기를 클릭해 한 마리씩, 또는 그물로 한 번에 잡으세요"));
+      wrap.appendChild(pond); wrap.appendChild(stat); wrap.appendChild(hist); wrap.appendChild(btns);
+      host.appendChild(wrap); spawnFish(); drawHist(); updateStat();
+    },
+    grade(ix, act) { const st = act._ix[ix.id]; const need = (ix.config && ix.config.need) || 40; return !!(st && st.maxReached >= need); }
+  };
+
+  /* stat-marker: 정규분포 히스토그램 위에 '평균선'과 'σ 폭'을 직접 끌어다 표시한다(고르기 아님, 조작으로 증명).
+     config: { mu, sigma, range:[lo,hi], tolMu, tolSig }. grade: 평균·표준편차 모두 허용오차 이내. */
+  Kinds["stat-marker"] = {
+    render(ix, host, act) {
+      const cfg = ix.config || {}, mu = cfg.mu || 0, sg = cfg.sigma || 1;
+      const lo = (cfg.range && cfg.range[0] != null) ? cfg.range[0] : mu - 4 * sg, hi = (cfg.range && cfg.range[1] != null) ? cfg.range[1] : mu + 4 * sg;
+      const st = (act._ix[ix.id] = { mu: lo + (hi - lo) * 0.32, sigma: (hi - lo) * 0.08 });
+      const W = 340, H = 200, padB = 24;
+      const wrap = el("div", "ix-statmark");
+      const box = el("div", "sm-stage"); box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="touch-action:none"></svg>'; const svg = box.querySelector("svg");
+      const read = el("div", "dsim-stat");
+      const X = (x) => 8 + (x - lo) / (hi - lo) * (W - 16), invX = (px) => lo + (px - 8) / (W - 16) * (hi - lo);
+      const nb = 30, bw = (hi - lo) / nb;
+      function pdf(x) { return Math.exp(-((x - mu) * (x - mu)) / (2 * sg * sg)); }
+      const heights = []; let mx = 0; for (let i = 0; i < nb; i++) { const c = (lo + (i + 0.5) * bw); const v = pdf(c); heights.push(v); if (v > mx) mx = v; }
+      function draw() {
+        const Yb = H - padB; const top = 14;
+        let s = svgLine(8, Yb, W - 8, Yb, "#9DB39A", 1.2);
+        for (let i = 0; i < nb; i++) { const x0 = X(lo + i * bw), x1 = X(lo + (i + 1) * bw), hgt = heights[i] / (mx * 1.08) * (Yb - top); s += '<rect x="' + (x0 + 0.5).toFixed(1) + '" y="' + (Yb - hgt).toFixed(1) + '" width="' + Math.max(1, x1 - x0 - 1).toFixed(1) + '" height="' + hgt.toFixed(1) + '" rx="1" fill="#BFD0E2"/>'; }
+        const mX = X(st.mu), sR = X(st.mu + st.sigma), sL = X(st.mu - st.sigma);
+        s += '<rect x="' + Math.min(sL, sR).toFixed(1) + '" y="' + top + '" width="' + Math.abs(sR - sL).toFixed(1) + '" height="' + (Yb - top) + '" fill="#5B7A5B" opacity="0.12"/>';
+        s += svgLine(mX, top - 4, mX, Yb, "#3F7FC4", 2.2);
+        s += '<circle cx="' + mX.toFixed(1) + '" cy="' + (top - 4) + '" r="7" fill="#3F7FC4"/><text x="' + mX.toFixed(1) + '" y="' + (top - 1) + '" font-size="8" text-anchor="middle" fill="#fff" font-weight="800">μ</text>';
+        [sR, sL].forEach((hx, idx) => { s += svgLine(hx, top + 8, hx, Yb, "#5B7A5B", 1.6, true); s += '<circle cx="' + hx.toFixed(1) + '" cy="' + (Yb - 10) + '" r="6.5" fill="#5B7A5B"/><text x="' + hx.toFixed(1) + '" y="' + (Yb - 7) + '" font-size="7.5" text-anchor="middle" fill="#fff" font-weight="800">σ</text>'; });
+        svg.innerHTML = s;
+        read.innerHTML = ""; read.appendChild(el("span", "dsim-pill", "평균 μ ≈ " + st.mu.toFixed(1))); read.appendChild(el("span", "dsim-pill", "표준편차 σ ≈ " + st.sigma.toFixed(1)));
+      }
+      let mode = null;
+      function pick(px) { const mX = X(st.mu), sR = X(st.mu + st.sigma), sL = X(st.mu - st.sigma); const dm = Math.abs(px - mX), ds = Math.min(Math.abs(px - sR), Math.abs(px - sL)); mode = (dm <= ds) ? "mu" : "sig"; }
+      function move(px) { const x = invX(px); if (mode === "mu") { st.mu = Math.max(lo, Math.min(hi, x)); } else { st.sigma = Math.max((hi - lo) * 0.02, Math.abs(x - st.mu)); } draw(); }
+      function evX(e) { const r = svg.getBoundingClientRect(), c = e.touches ? e.touches[0] : e; return (c.clientX - r.left) / r.width * W; }
+      svg.addEventListener("mousedown", (e) => { pick(evX(e)); move(evX(e)); });
+      svg.addEventListener("mousemove", (e) => { if (mode) move(evX(e)); });
+      window.addEventListener("mouseup", () => { mode = null; });
+      svg.addEventListener("touchstart", (e) => { pick(evX(e)); move(evX(e)); e.preventDefault(); }, { passive: false });
+      svg.addEventListener("touchmove", (e) => { if (mode) move(evX(e)); e.preventDefault(); }, { passive: false });
+      wrap.appendChild(box); wrap.appendChild(read); host.appendChild(wrap); draw();
+    },
+    grade(ix, act) { const st = act._ix[ix.id], cfg = ix.config || {}, mu = cfg.mu || 0, sg = cfg.sigma || 1; const lo = (cfg.range && cfg.range[0] != null) ? cfg.range[0] : mu - 4 * sg, hi = (cfg.range && cfg.range[1] != null) ? cfg.range[1] : mu + 4 * sg; const tM = cfg.tolMu != null ? cfg.tolMu : (hi - lo) * 0.05, tS = cfg.tolSig != null ? cfg.tolSig : sg * 0.3; return !!(st && Math.abs(st.mu - mu) <= tM && Math.abs(st.sigma - sg) <= tS); }
+  };
+
+  /* z-place: 값(물고기)을 표준화한 위치로 Z 눈금자에 직접 끌어다 놓는다. 표준화를 '직접 수행'·비교.
+     config: { fishes:[{label, mu, sigma, x, color?}], tol }. grade: 모든 fish의 놓인 Z가 (x-mu)/sigma 와 tol 이내. */
+  Kinds["z-place"] = {
+    render(ix, host, act) {
+      const cfg = ix.config || {}, fishes = cfg.fishes || [], zr = cfg.zrange || [-3.2, 3.2], tol = cfg.tol != null ? cfg.tol : 0.25;
+      const st = (act._ix[ix.id] = { pos: fishes.map(() => zr[0] + 0.4) });   // 처음엔 왼쪽 끝
+      const W = 340, H = 70 + fishes.length * 26, ry = H - 26;
+      const wrap = el("div", "ix-zplace");
+      const box = el("div", "zp-stage"); box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="touch-action:none"></svg>'; const svg = box.querySelector("svg");
+      const read = el("div", "dsim-stat");
+      const X = (z) => 16 + (z - zr[0]) / (zr[1] - zr[0]) * (W - 32), invX = (px) => zr[0] + (px - 16) / (W - 32) * (zr[1] - zr[0]);
+      const cols = ["#CC3F88", "#3F7FC4", "#C9772E"];
+      function draw() {
+        let s = svgLine(16, ry, W - 16, ry, "#9DB39A", 1.6);
+        for (let z = Math.ceil(zr[0]); z <= zr[1]; z++) { s += svgLine(X(z), ry - 4, X(z), ry + 4, z === 0 ? "#5B7A5B" : "#C2CDB8", z === 0 ? 2 : 1); s += '<text x="' + X(z).toFixed(1) + '" y="' + (ry + 16) + '" font-size="9" text-anchor="middle" fill="#7A8A78">' + z + '</text>'; }
+        s += '<text x="' + X(0).toFixed(1) + '" y="' + (ry - 9) + '" font-size="9" text-anchor="middle" fill="#5B7A5B" font-weight="800">평균(Z=0)</text>';
+        fishes.forEach((f, i) => { const cx = X(st.pos[i]), c = f.color || cols[i % cols.length]; s += svgLine(cx, 14 + i * 22, cx, ry, c, 1, true); s += '<g class="zp-tok" data-i="' + i + '" style="cursor:grab"><rect x="' + (cx - 56).toFixed(1) + '" y="' + (4 + i * 22) + '" width="112" height="18" rx="9" fill="' + c + '"/><text x="' + cx.toFixed(1) + '" y="' + (16 + i * 22) + '" font-size="9.5" text-anchor="middle" fill="#fff" font-weight="700">' + f.label + '</text></g>'; });
+        svg.innerHTML = s;
+        read.innerHTML = ""; fishes.forEach((f, i) => read.appendChild(el("span", "dsim-pill", f.label.split(" ")[0] + " Z ≈ " + st.pos[i].toFixed(2))));
+      }
+      let drag = -1;
+      function evX(e) { const r = svg.getBoundingClientRect(), c = e.touches ? e.touches[0] : e; return (c.clientX - r.left) / r.width * W; }
+      function pickIdx(px, py) { let best = -1, bd = 1e9; fishes.forEach((f, i) => { const d = Math.abs(px - X(st.pos[i])); if (d < bd) { bd = d; best = i; } }); return bd < 80 ? best : -1; }
+      svg.addEventListener("mousedown", (e) => { drag = pickIdx(evX(e)); if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } });
+      svg.addEventListener("mousemove", (e) => { if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } });
+      window.addEventListener("mouseup", () => { drag = -1; });
+      svg.addEventListener("touchstart", (e) => { drag = pickIdx(evX(e)); if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } e.preventDefault(); }, { passive: false });
+      svg.addEventListener("touchmove", (e) => { if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } e.preventDefault(); }, { passive: false });
+      wrap.appendChild(box); wrap.appendChild(read); host.appendChild(wrap); draw();
+    },
+    grade(ix, act) { const st = act._ix[ix.id], cfg = ix.config || {}, fishes = cfg.fishes || [], tol = cfg.tol != null ? cfg.tol : 0.25; return !!(st && fishes.every((f, i) => Math.abs(st.pos[i] - (f.x - f.mu) / f.sigma) <= tol)); }
   };
 
   window.SAGE = window.SAGE || {};

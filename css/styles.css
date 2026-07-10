@@ -351,6 +351,38 @@ body{
 .slider-label{ flex:none; min-width:54px; font-size:13.5px; font-weight:800; color:var(--ink2); }
 .slider-range{ flex:1; accent-color:var(--green); }
 .slider-val{ flex:none; min-width:38px; text-align:right; font-size:14px; font-weight:800; color:var(--green); }
+/* 물고기 잡기(pond) / 평균·σ 표시(stat-marker) / Z 눈금자(z-place) */
+.ix-pond, .ix-statmark, .ix-zplace{ background:#fff; border:1px solid #DDE7D5; border-radius:12px; padding:10px; }
+.pond-water svg, .pond-hist svg, .sm-stage svg, .zp-stage svg{ width:100%; max-width:380px; height:auto; display:block; margin:0 auto; }
+.pond-water{ margin-bottom:6px; }
+.pond-hint{ font-size:11.5px; color:var(--mut); text-align:center; margin-bottom:6px; }
+@keyframes bob{ from{ transform:translateY(-3px); } to{ transform:translateY(4px); } }
+.pf-b{ transform-box:fill-box; transform-origin:center; }
+.sm-stage svg, .zp-stage svg{ cursor:grab; }
+/* 분포 시뮬레이터(dist-sim) */
+.ix-dsim{ background:#fff; border:1px solid #DDE7D5; border-radius:12px; padding:10px; }
+.dsim-stage svg{ width:100%; max-width:380px; height:auto; display:block; margin:0 auto; }
+.dsim-stat{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:8px 0; }
+.dsim-pill{ font-size:11.5px; font-weight:700; color:var(--ink2); background:var(--tagbg); border-radius:999px; padding:3px 10px; }
+.dsim-pill.ok{ color:#fff; background:var(--green); }
+.dsim-btns{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.dsim-nbtn{ font-size:12px; font-weight:800; color:var(--ink2); background:#EEF3E9; border:1.5px solid var(--line2); border-radius:8px; padding:6px 11px; cursor:pointer; }
+.dsim-nbtn.on{ background:var(--green); color:#fff; border-color:var(--green); }
+
+/* 스텝형 진행(stepper) */
+.stp-dots{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:4px 0 12px; }
+.stp-dot{ width:9px; height:9px; border-radius:50%; background:#DCE4D4; transition:background .15s; }
+.stp-dot.done{ background:var(--green); }
+.stp-dot.cur{ background:var(--gold); transform:scale(1.25); }
+.stp-skills{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:4px; }
+.stp-recap{ font-size:14px; font-weight:700; color:var(--ink2); background:#F6F8F3; border-radius:10px; padding:11px 13px; margin-bottom:10px; line-height:1.5; }
+.stp-fb{ border-radius:12px; padding:13px 15px; border:1px solid; }
+.stp-fb.ok{ background:#EEF6EA; border-color:#BFD9B2; }
+.stp-fb.no{ background:#FBF1EC; border-color:#E6C6B6; }
+.stp-fb-h{ font-size:14px; font-weight:800; margin-bottom:5px; }
+.stp-fb.ok .stp-fb-h{ color:var(--green); }
+.stp-fb.no .stp-fb-h{ color:#B4683C; }
+.stp-fb-x{ font-size:13px; color:var(--ink2); line-height:1.6; }
 /* 좌표 마커 드래그(place-target) */
 .ix-place{ background:#fff; border:1px solid #DDE7D5; border-radius:12px; padding:8px; }
 .ix-place svg{ width:100%; max-width:380px; height:auto; display:block; margin:0 auto; touch-action:none; cursor:grab; }
