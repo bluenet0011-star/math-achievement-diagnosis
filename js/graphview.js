@@ -258,8 +258,16 @@
     ];
   }
 
+  // 캔버스 위의 휠은 그래프 줌 전용 — 페이지 세로 스크롤이 함께 움직여 어지러운 문제 차단
+  function lockWheel(el) {
+    if (!el || el._wheelLocked) return;
+    el._wheelLocked = true;
+    el.addEventListener("wheel", (e) => { e.preventDefault(); }, { passive: false });
+  }
+
   function mount(el, graph, context) {
     g = graph; ctx = context; showAll = false; subjTree = null;
+    lockWheel(el);
     cy = cytoscape({
       container: el, elements: buildElements(), style: style(),
       layout: { name: "preset", fit: false }, wheelSensitivity: 0.25, minZoom: 0.06, maxZoom: 2.5,
@@ -603,6 +611,7 @@
   // 미니맵: 읽기전용 오버뷰 + 현재 뷰포트 사각형
   function initMinimap(el, rectEl) {
     if (!cy || !el) return;
+    lockWheel(el);
     mini = cytoscape({ container: el, elements: cy.elements("[kind='std'],[kind='subject']").jsons(),
       style: [
         { selector: "node[kind='std']", style: { "background-color": (n) => TRACK_COLOR[n.data("track")] || "#5B7A5B", "width": 158, "height": 44, "shape": "round-rectangle" } },
@@ -768,6 +777,7 @@
   }
   // 전체 개념 흐름 트리: 190개 성취기준을 선수관계로 이어 한 장의 트리로(과목별 색)
   function mountConceptTree(el, graph, context) {
+    lockWheel(el);
     g = graph; ctx = context || {}; showAll = false; subjTree = null;
     const els = [];
     g.nodesByType("standard").forEach((s) => {
