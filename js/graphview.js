@@ -23,7 +23,7 @@
     return "#" + hx(r) + hx(g0) + hx(b);
   }
 
-  let cy = null, g = null, ctx = null, showAll = false, ec = null, mini = null;
+  let cy = null, g = null, ctx = null, showAll = false, ec = null, mini = null, miniCleanup = null;
   let editMode = false, pendingSrc = null, edgeSeq = 0, editTab = "edge", verifiedOnly = false, hlDownstream = false;
   let nodePos = {};   // id -> {x,y,colLeft,subj,lastCol} (간선 통로 라우팅용)
   let subjTree = null;   // 과목 트리 모드일 때 {ucolor, unitOf} — applyColors가 단원색으로 칠함
@@ -626,9 +626,15 @@
       cy.pan({ x: cy.width() / 2 - mx * cy.zoom(), y: cy.height() / 2 - my * cy.zoom() });
     };
     let dragging = false;
-    el.addEventListener("mousedown", (ev) => { dragging = true; jump(ev); ev.preventDefault(); });
-    window.addEventListener("mousemove", (ev) => { if (dragging) jump(ev); });
-    window.addEventListener("mouseup", () => { dragging = false; });
+    const onDown = (ev) => { dragging = true; jump(ev); ev.preventDefault(); };
+    const onMove = (ev) => { if (dragging) jump(ev); };
+    const onUp = () => { dragging = false; };
+    el.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    // 이전 미니맵의 window 리스너 정리(뷰 전환마다 누적되던 누수 차단)
+    if (miniCleanup) miniCleanup();
+    miniCleanup = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); el.removeEventListener("mousedown", onDown); };
   }
 
   // 전체(수학) 교과 과목 트리: 16개 과목을 교과 간 선수관계로 연결해 한 화면 트리로
@@ -819,7 +825,7 @@
     const lo = cy.layout(conceptLayout()); lo.run();
   }
 
-  function unmount() { if (mini) { mini.destroy(); mini = null; } if (cy) { cy.destroy(); cy = null; } ec = null; }
+  function unmount() { if (miniCleanup) { miniCleanup(); miniCleanup = null; } if (mini) { mini.destroy(); mini = null; } if (cy) { cy.destroy(); cy = null; } ec = null; }
 
   window.SAGE.GraphView = {
     mount, unmount, highlight, focus, setShowAll, applyColors, fitSubject, fitAll, zoomBy,

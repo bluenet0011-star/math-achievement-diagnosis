@@ -1,11 +1,15 @@
 /* styles.css — 디자인 시안(세이지 진단 프로토타입) 팔레트 이식 */
 :root{
   --bg:#E4E8DE; --card:#F3F5F0; --panel:#FBFCFA; --line:#E4E9DE; --line2:#E0E6D8;
-  --ink:#2C342C; --ink2:#3F473F; --mut:#7C857C; --mut2:#8A938A; --mut3:#9AA59A;
+  /* 회색 계열: WCAG AA 대비(카드 배경 기준 실측) 충족값 — 검수 a11y 지적 반영 */
+  --ink:#2C342C; --ink2:#3F473F; --mut:#65705F; --mut2:#6C766C; --mut3:#77827A;
   --green:#5B7A5B; --green2:#5B8A5B; --tagbg:#E8EEE2; --taginK:#43583F;
   --gold:#C0A878; --goldbg:#F1E9D6; --goldink:#7A5E22;
 }
 *{ box-sizing:border-box; }
+/* 키보드 포커스 가시화 — div 버튼 접근성 */
+[role="button"]:focus-visible, button:focus-visible, .chip:focus-visible, .btn:focus-visible{ outline:2px solid var(--green); outline-offset:2px; border-radius:8px; }
+@media (prefers-reduced-motion: reduce){ *, *::before, *::after{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
 html,body{ margin:0; padding:0; }
 body{
   font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
@@ -216,7 +220,7 @@ body{
 .std-top{ display:flex; align-items:center; gap:6px; }
 .std-code{ font-size:10px; font-weight:700; color:var(--mut2); letter-spacing:.04em; }
 .star{ color:var(--gold); font-size:11px; }
-.badge-assess{ margin-left:auto; font-size:9px; font-weight:800; color:#fff; background:var(--gold); padding:2px 6px; border-radius:6px; }
+.badge-assess{ margin-left:auto; font-size:10px; font-weight:800; color:#fff; background:var(--goldink); padding:2px 6px; border-radius:6px; }
 .std-name{ font-size:12px; font-weight:700; margin-top:3px; line-height:1.35; }
 .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:0 0 auto; }
 .legend{ position:absolute; left:18px; bottom:14px; display:flex; gap:14px; background:#fff;
@@ -368,6 +372,13 @@ body{
 .dsim-btns{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
 .dsim-nbtn{ font-size:12px; font-weight:800; color:var(--ink2); background:#EEF3E9; border:1.5px solid var(--line2); border-radius:8px; padding:6px 11px; cursor:pointer; }
 .dsim-nbtn.on{ background:var(--green); color:#fff; border-color:var(--green); }
+
+/* 결과 리포트: 수행능력별 판정 칩 */
+.rskill-row{ display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.rskill{ font-size:11px; font-weight:700; border-radius:7px; padding:3px 8px; line-height:1.35; }
+.rskill.pass{ color:#3F6B3F; background:#EAF3E6; }
+.rskill.fail{ color:#9C4A2E; background:#F9EDE6; }
+.rskill.skip{ color:var(--mut); background:#EFEFE9; }
 
 /* 스텝형 진행(stepper) */
 .stp-dots{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:4px 0 12px; }

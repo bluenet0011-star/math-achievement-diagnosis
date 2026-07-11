@@ -24,6 +24,12 @@
       else if (k.startsWith("on") && typeof attrs[k] === "function") el[k.toLowerCase()] = attrs[k];
       else if (attrs[k] != null) el.setAttribute(k, attrs[k]);
     }
+    // 접근성: 클릭 가능한 div/span은 키보드로도 조작 가능해야 한다 (Tab 포커스 + Enter/Space)
+    if (attrs && typeof attrs.onClick === "function" && (tag === "div" || tag === "span")) {
+      if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "0");
+      if (!el.hasAttribute("role")) el.setAttribute("role", "button");
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); attrs.onClick(e); } });
+    }
     (children || []).forEach((c) => {
       if (c == null) return;
       el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
@@ -607,7 +613,9 @@
   }
   function setupKeyboard() {
     document.addEventListener("keydown", (e) => {
-      if (mountedKind !== "workspace") return;
+      // 계통도가 마운트된 뷰에서만(tree=전체 개념트리, det:*=과목 상세) — 종전 "workspace" 비교는 항상 거짓이라 단축키가 죽어 있었음
+      if (!(mountedKind === "tree" || (typeof mountedKind === "string" && mountedKind.indexOf("det:") === 0))) return;
+      if (!window.SAGE.GraphView) return;
       const tag = (e.target.tagName || "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       const s = 90;
@@ -1119,16 +1127,24 @@
       h("div", { class: "ring-row" }, [ringSVG(offset, circ),
         h("div", {}, [h("div", { class: "ring-num" }, [String(rep.overall), h("span", { class: "pct" }, ["%"])]),
           h("div", { class: "ring-sub" }, ["전체 성취 도달"])])]),
-      h("div", { class: "p-label mt" }, ["성취기준별 결과"]),
-      h("div", { class: "result-list" }, rep.perStandard.map((r) =>
-        h("div", { class: "rrow", onClick: () => focusPrereq(r.id) }, [
+      h("div", { class: "p-label mt" }, ["성취기준별 결과 ", h("span", { class: "p-hint-mini" }, ["· 세부 수행능력 단위 판정"])]),
+      h("div", { class: "result-list" }, rep.perStandard.map((r) => {
+        // 수행능력별 판정 — 이 진단의 핵심 산출물 (✓보유 · ✗미보유 · ⊘건너뜀 · 미측정은 생략)
+        const node = graph.node(r.id), sr = state.dx.skillResults || {};
+        const skillEls = ((node && node.skills) || []).map((s) => {
+          const st = sr[s.id]; if (!st) return null;
+          const icon = st === "pass" ? "✓" : (st === "fail" ? "✗" : "⊘");
+          return h("span", { class: "rskill " + st, title: s.id }, [icon + " " + s.name]);
+        }).filter(Boolean);
+        return h("div", { class: "rrow", onClick: () => focusPrereq(r.id) }, [
           h("div", { class: "rrow-top" }, [
             h("span", { class: "dot", style: "background:" + SAGE.MASTERY[r.mastery].color }),
             spanMath("rstd", r.name),
             r.skipped ? h("span", { class: "rskip" }, ["모르겠어요"]) : null,
             h("span", { class: "rlabel" }, [SAGE.MASTERY[r.mastery].label])]),
-          reachBar(r.mastery)])
-      )),
+          reachBar(r.mastery),
+          skillEls.length ? h("div", { class: "rskill-row" }, skillEls) : null]);
+      })),
       h("div", { class: "panel-foot" }, [
         rep.recommendation
           ? h("div", { class: "note rec" }, ["💡 ", h("strong", {}, [rep.recommendation.name]), " 부터 다시 짚어보면 전반이 함께 올라가요."])
@@ -1205,25 +1221,33 @@
 
   /* ---------- 스텝형: 미션 하나씩, 제출→피드백→다음 ---------- */
   function stepperScreen(dx, cur, act, units) {
-    if (!state._stp || state._stp.actId !== act.id) state._stp = { actId: act.id, i: 0, results: [], submitted: false, lastPass: null };
-    const st = state._stp;
+    if (!state._stp || state._stp.actId !== act.id) state._stp = { actId: act.id, i: 0, results: [], submitted: false, lastPass: null, attempts: {}, retried: {} };
+    const st = state._stp; st.attempts = st.attempts || {}; st.retried = st.retried || {};
     if (st.i >= units.length) { const results = units.map((u, k) => st.results[k] || "fail"); state._stp = null; dx.submit(results); afterAnswer(); return h("div"); }
     const ix = units[st.i];
     const host = h("div", { class: "widget" });
     if (!st.submitted) SAGE.Templates.interactive.renderOne(act, host, st.i);
     else {
       if (ix.prompt) host.appendChild(hMath("stp-recap", ix.prompt));
+      // 해설(explain)은 정답 시에만 — 오답 시 정답 수치·결론 노출은 이후 미션 답을 누설한다. 오답은 힌트만.
+      const canRetry = !st.lastPass && (st.attempts[st.i] || 0) < 2;
       host.appendChild(h("div", { class: "stp-fb " + (st.lastPass ? "ok" : "no") }, [
         h("div", { class: "stp-fb-h" }, [st.lastPass ? "✓ 정확해요" : "✗ 다시 살펴봐요"]),
-        ix.explain ? hMath("stp-fb-x", ix.explain) : null
+        st.lastPass
+          ? (ix.explain ? hMath("stp-fb-x", ix.explain) : null)
+          : hMath("stp-fb-x", (ix.hint || "핵심 개념을 다시 떠올려 보세요.") + (canRetry ? " 한 번 더 시도할 수 있어요." : " 정답과 풀이는 탐사 완료 후 리포트에서 확인할 수 있어요."))
       ]));
     }
     const dots = h("div", { class: "stp-dots" }, units.map((u, k) => h("span", { class: "stp-dot" + (k < st.i ? " done" : (k === st.i ? " cur" : "")) })));
+    const retryOk = !st.lastPass && (st.attempts[st.i] || 0) < 2;
     const btns = !st.submitted
       ? [h("div", { class: "btn primary grow", onClick: () => stepSubmit(act) }, ["제출"]),
          h("div", { class: "btn light", title: "이 미션 입력 비우기", onClick: () => render() }, ["↺ 초기화"]),
          h("div", { class: "btn ghost", onClick: () => stepSkip(act) }, ["모르겠어요"])]
-      : [h("div", { class: "btn primary grow", onClick: () => stepNext(act, units) }, [st.i >= units.length - 1 ? "탐사 완료 →" : "다음 미션 →"])];
+      : (retryOk
+          ? [h("div", { class: "btn primary grow", onClick: () => stepRetry() }, ["↻ 다시 해보기"]),
+             h("div", { class: "btn ghost", onClick: () => stepNext(act, units) }, [st.i >= units.length - 1 ? "그냥 완료" : "그냥 다음으로"])]
+          : [h("div", { class: "btn primary grow", onClick: () => stepNext(act, units) }, [st.i >= units.length - 1 ? "탐사 완료 →" : "다음 미션 →"])]);
     return h("div", { class: "activity" }, [h("div", { class: "act-inner" }, [
       h("div", { class: "act-tag-row" }, [h("span", { class: "act-tag" }, [cur.node.code]), h("span", { class: "act-cat" }, ["미션 " + (st.i + 1) + " / " + units.length])]),
       h("h2", { class: "act-title" }, [act.title || cur.node.name]),
@@ -1233,8 +1257,16 @@
       h("div", { class: "diag-hint" }, ["하나의 탐사입니다 — 각 미션의 산출물이 다음 미션으로 이어집니다."])
     ])]);
   }
-  function stepSubmit(act) { const st = state._stp; st.results[st.i] = SAGE.Templates.interactive.gradeOne(act, st.i) ? "pass" : "fail"; st.lastPass = st.results[st.i] === "pass"; st.submitted = true; render(); }
-  function stepSkip(act) { const st = state._stp; st.results[st.i] = "fail"; st.lastPass = false; st.submitted = true; render(); }
+  function stepSubmit(act) {
+    const st = state._stp;
+    const pass = SAGE.Templates.interactive.gradeOne(act, st.i);
+    st.results[st.i] = pass ? "pass" : "fail";
+    st.lastPass = pass;
+    if (!pass) st.attempts[st.i] = (st.attempts[st.i] || 0) + 1;
+    st.submitted = true; render();
+  }
+  function stepRetry() { const st = state._stp; st.retried[st.i] = true; st.submitted = false; st.lastPass = null; render(); }
+  function stepSkip(act) { const st = state._stp; st.results[st.i] = "fail"; st.attempts[st.i] = 9; st.lastPass = false; st.submitted = true; render(); }
   function stepNext(act, units) {
     const st = state._stp; st.i++; st.submitted = false; st.lastPass = null;
     if (st.i >= units.length) { const results = units.map((u, k) => st.results[k] || "fail"); state._stp = null; state.dx.submit(results); afterAnswer(); }

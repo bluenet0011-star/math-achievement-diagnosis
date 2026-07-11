@@ -266,6 +266,15 @@ def main():
                 start = cfg.get("start") or [round((xr[0] + xr[1]) / 2), round((yr[0] + yr[1]) / 2)]
                 if t and abs(start[0] - t[0]) <= tol and abs(start[1] - t[1]) <= tol:
                     E(f"시작 위치 {start} 가 target {t} 허용오차 안(정답 노출)")
+        elif kind == "stat-marker":
+            mu, sg = cfg.get("mu"), cfg.get("sigma")
+            rng = cfg.get("range") or [(mu or 0) - 4 * (sg or 1), (mu or 0) + 4 * (sg or 1)]
+            lo, hi = rng[0], rng[1]
+            mu0, sg0 = lo + (hi - lo) * 0.32, (hi - lo) * 0.08   # templates.js 초기값과 동일식
+            tM = cfg.get("tolMu", (hi - lo) * 0.05)
+            tS = cfg.get("tolSig", (sg or 1) * 0.3)
+            if mu is not None and abs(mu0 - mu) <= tM and abs(sg0 - sg) <= tS:
+                E(f"초기 위치(μ0={mu0:.2f}, σ0={sg0:.2f})가 허용오차 안 — 무조작 통과")
         elif kind == "fill-table":
             rows, blanks = cfg.get("rows", []), cfg.get("blanks", [])
             answers = cfg.get("answers", {})

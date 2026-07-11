@@ -720,7 +720,8 @@
       let drag = false;
       svg.addEventListener("mousedown", (e) => { drag = true; fromEvent(e); });
       svg.addEventListener("mousemove", (e) => { if (drag) fromEvent(e); });
-      window.addEventListener("mouseup", () => { drag = false; });
+      const upPT = () => { if (!svg.isConnected) { window.removeEventListener("mouseup", upPT); return; } drag = false; };   // 자가 정리(재렌더 누수 방지)
+      window.addEventListener("mouseup", upPT);
       svg.addEventListener("touchstart", (e) => { fromEvent(e); e.preventDefault(); }, { passive: false });
       svg.addEventListener("touchmove", (e) => { fromEvent(e); e.preventDefault(); }, { passive: false });
       box.appendChild(read); host.appendChild(box); redraw();
@@ -853,7 +854,17 @@
       const X = (x) => 8 + (x - lo) / (hi - lo) * (W - 16), invX = (px) => lo + (px - 8) / (W - 16) * (hi - lo);
       const nb = 30, bw = (hi - lo) / nb;
       function pdf(x) { return Math.exp(-((x - mu) * (x - mu)) / (2 * sg * sg)); }
-      const heights = []; let mx = 0; for (let i = 0; i < nb; i++) { const c = (lo + (i + 0.5) * bw); const v = pdf(c); heights.push(v); if (v > mx) mx = v; }
+      // dataFrom: 같은 활동의 이전 미션(pond 등)에서 학생이 직접 모은 표본으로 히스토그램 구성 — '잡은 그 분포' 연속성
+      const srcSt = cfg.dataFrom && act._ix && act._ix[cfg.dataFrom];
+      const srcData = (srcSt && Array.isArray(srcSt.data) && srcSt.data.length >= 20) ? srcSt.data : null;
+      const heights = []; let mx = 0;
+      for (let i = 0; i < nb; i++) {
+        let v;
+        if (srcData) { const b0 = lo + i * bw, b1 = b0 + bw; v = srcData.filter((x) => x >= b0 && x < b1).length; }
+        else { v = pdf(lo + (i + 0.5) * bw); }
+        heights.push(v); if (v > mx) mx = v;
+      }
+      if (!mx) mx = 1;
       function draw() {
         const Yb = H - padB; const top = 14;
         let s = svgLine(8, Yb, W - 8, Yb, "#9DB39A", 1.2);
@@ -872,7 +883,8 @@
       function evX(e) { const r = svg.getBoundingClientRect(), c = e.touches ? e.touches[0] : e; return (c.clientX - r.left) / r.width * W; }
       svg.addEventListener("mousedown", (e) => { pick(evX(e)); move(evX(e)); });
       svg.addEventListener("mousemove", (e) => { if (mode) move(evX(e)); });
-      window.addEventListener("mouseup", () => { mode = null; });
+      const upSM = () => { if (!svg.isConnected) { window.removeEventListener("mouseup", upSM); return; } mode = null; };
+      window.addEventListener("mouseup", upSM);
       svg.addEventListener("touchstart", (e) => { pick(evX(e)); move(evX(e)); e.preventDefault(); }, { passive: false });
       svg.addEventListener("touchmove", (e) => { if (mode) move(evX(e)); e.preventDefault(); }, { passive: false });
       wrap.appendChild(box); wrap.appendChild(read); host.appendChild(wrap); draw();
@@ -905,7 +917,8 @@
       function pickIdx(px, py) { let best = -1, bd = 1e9; fishes.forEach((f, i) => { const d = Math.abs(px - X(st.pos[i])); if (d < bd) { bd = d; best = i; } }); return bd < 80 ? best : -1; }
       svg.addEventListener("mousedown", (e) => { drag = pickIdx(evX(e)); if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } });
       svg.addEventListener("mousemove", (e) => { if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } });
-      window.addEventListener("mouseup", () => { drag = -1; });
+      const upZP = () => { if (!svg.isConnected) { window.removeEventListener("mouseup", upZP); return; } drag = -1; };
+      window.addEventListener("mouseup", upZP);
       svg.addEventListener("touchstart", (e) => { drag = pickIdx(evX(e)); if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } e.preventDefault(); }, { passive: false });
       svg.addEventListener("touchmove", (e) => { if (drag >= 0) { st.pos[drag] = Math.max(zr[0], Math.min(zr[1], invX(evX(e)))); draw(); } e.preventDefault(); }, { passive: false });
       wrap.appendChild(box); wrap.appendChild(read); host.appendChild(wrap); draw();
